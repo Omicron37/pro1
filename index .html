@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f8f4ed" />
+  <title>KOTOBA — เกมทายคำศัพท์ภาษาญี่ปุ่น</title>
+  <style>
+    :root {
+      --ink: #293b38;
+      --muted: #71817a;
+      --paper: #fbf8f2;
+      --card: rgba(255,255,255,.88);
+      --green: #547b6b;
+      --green-dark: #365b4e;
+      --green-soft: #e7f0e9;
+      --pink: #d98f9a;
+      --pink-soft: #f8e9e9;
+      --gold: #c69c57;
+      --line: #e9e5dc;
+      --shadow: 0 22px 65px rgba(61, 75, 64, .10);
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
+      background:
+        radial-gradient(circle at 8% 12%, rgba(217,143,154,.13), transparent 23rem),
+        radial-gradient(circle at 94% 82%, rgba(119,157,133,.15), transparent 26rem),
+        linear-gradient(145deg, #fbf8f2 0%, #f2f4ec 100%);
+      overflow-x: hidden;
+    }
+
+    body::before, body::after {
+      content: "";
+      position: fixed;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .22;
+    }
+    body::before {
+      width: 240px; height: 240px; left: -92px; top: 36%;
+      border: 1px solid #d99ca4; border-radius: 50%;
+      box-shadow: 0 0 0 18px rgba(217,156,164,.12), 0 0 0 38px rgba(217,156,164,.08);
+    }
+    body::after {
+      width: 190px; height: 190px; right: -80px; top: 7%;
+      border: 1px solid #8eaa96; border-radius: 50%;
+      box-shadow: 0 0 0 16px rgba(142,170,150,.12), 0 0 0 34px rgba(142,170,150,.08);
+    }
+
+    button { font: inherit; }
+    button:focus-visible { outline: 3px solid rgba(84,123,107,.4); outline-offset: 3px; }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      width: min(100% - 32px, 920px);
+      margin: 0 auto;
+      padding: 26px 0 38px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; }
+    .brand-mark {
+      display: grid; place-items: center;
+      width: 43px; height: 43px;
+      border-radius: 15px 15px 15px 5px;
+      color: white; background: var(--green);
+      box-shadow: 0 7px 17px rgba(54,91,78,.2);
+      font-family: Georgia, serif; font-size: 23px;
+    }
+    .brand-name { font-weight: 900; letter-spacing: .18em; font-size: 16px; }
+    .brand-caption { color: var(--muted); font-size: 11px; letter-spacing: .04em; margin-top: 1px; }
+    .level-tag {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 13px; border: 1px solid #e5e8dc;
+      border-radius: 999px; color: var(--green-dark);
+      background: rgba(255,255,255,.58); font-size: 12px; font-weight: 700;
+    }
+    .level-dot { width: 7px; height: 7px; background: #86a88c; border-radius: 50%; }
+
+    main { flex: 1; display: grid; place-items: center; }
+    .screen { width: 100%; animation: appear .35s ease both; }
+    @keyframes appear { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+    .hidden { display: none !important; }
+
+    .welcome-card, .game-card, .result-card {
+      position: relative;
+      width: min(100%, 690px);
+      margin: 0 auto;
+      padding: clamp(25px, 5vw, 48px);
+      border: 1px solid rgba(255,255,255,.85);
+      border-radius: 28px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+    }
+    .welcome-card::before, .result-card::before {
+      content: ""; position: absolute; width: 175px; height: 175px;
+      right: -65px; top: -75px; border-radius: 50%;
+      background: rgba(217,143,154,.10);
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--green); font-size: 12px; font-weight: 800;
+      letter-spacing: .12em; text-transform: uppercase;
+    }
+    .eyebrow::before { content: ""; width: 23px; height: 1px; background: var(--pink); }
+    h1, h2, p { margin-top: 0; }
+    .hero-title {
+      margin: 17px 0 11px;
+      font-size: clamp(32px, 6vw, 51px);
+      line-height: 1.2; letter-spacing: -.04em;
+      font-weight: 900;
+    }
+    .hero-title span { color: var(--green); }
+    .hero-jp {
+      display: inline-block; margin-left: 8px;
+      color: var(--pink); font-family: "Yu Gothic", "Meiryo", sans-serif;
+      font-size: .48em; font-weight: 600; letter-spacing: .04em;
+      vertical-align: 8px;
+    }
+    .intro { color: var(--muted); line-height: 1.85; font-size: 14px; max-width: 510px; margin-bottom: 25px; }
+
+    .feature-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 25px 0 29px; }
+    .feature {
+      padding: 14px 10px; border: 1px solid var(--line);
+      border-radius: 16px; background: #fffefa; text-align: center;
+    }
+    .feature-icon { font-size: 19px; margin-bottom: 6px; }
+    .feature-value { font-size: 16px; font-weight: 900; color: var(--green-dark); }
+    .feature-label { color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+    .primary-btn {
+      display: inline-flex; justify-content: center; align-items: center; gap: 10px;
+      min-height: 52px; padding: 0 27px; border: 0; border-radius: 15px;
+      color: white; background: var(--green);
+      box-shadow: 0 9px 20px rgba(54,91,78,.2);
+      font-weight: 800; cursor: pointer; transition: .2s ease;
+    }
+    .primary-btn:hover { background: var(--green-dark); transform: translateY(-2px); box-shadow: 0 12px 24px rgba(54,91,78,.24); }
+    .primary-btn:active { transform: translateY(0); }
+    .note { margin: 15px 0 0; color: #929b91; font-size: 11px; line-height: 1.7; }
+
+    .game-card { padding: clamp(20px, 4vw, 34px); }
+    .game-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 22px; }
+    .round-label { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .score-pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 13px; border-radius: 999px;
+      background: var(--green-soft); color: var(--green-dark);
+      font-weight: 800; font-size: 13px;
+    }
+    .timer-row { display: flex; align-items: center; gap: 13px; margin-bottom: 24px; }
+    .timer-track { flex: 1; height: 8px; border-radius: 99px; background: #edf0e9; overflow: hidden; }
+    .timer-fill { height: 100%; width: 100%; border-radius: inherit; background: linear-gradient(90deg, #83a88c, #c5b17b); transition: width .25s linear; }
+    .timer-number { min-width: 56px; text-align: right; font-variant-numeric: tabular-nums; color: var(--green-dark); font-size: 18px; font-weight: 900; }
+    .timer-number.urgent { color: #c66e76; }
+
+    .question-area { text-align: center; padding: 10px 0 23px; }
+    .question-kicker { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+    .sound-button {
+      display: inline-flex; justify-content: center; align-items: center; gap: 12px;
+      min-width: min(100%, 250px); min-height: 94px; padding: 15px 25px;
+      border: 1px solid #e2e9df; border-radius: 22px;
+      color: var(--green-dark); background: linear-gradient(135deg, #f1f6ef, #fbf8f2);
+      cursor: pointer; transition: .2s ease;
+    }
+    .sound-button:hover { transform: translateY(-2px); border-color: #b8cdbd; box-shadow: 0 8px 20px rgba(84,123,107,.1); }
+    .sound-icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 15px; background: white; font-size: 22px; }
+    .sound-main { text-align: left; }
+    .sound-main strong { display: block; font-size: 15px; }
+    .sound-main small { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+    .listen-hint { color: #9aa49a; font-size: 11px; margin-top: 11px; }
+
+    .choices-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 11px; gap: 10px; }
+    .choices-heading strong { font-size: 13px; }
+    .choices-heading span { color: #9aa49a; font-size: 11px; }
+    .choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 11px; }
+    .choice {
+      position: relative; min-height: 82px; padding: 13px 16px;
+      border: 1px solid var(--line); border-radius: 16px;
+      background: #fffefa; color: var(--ink); text-align: center;
+      cursor: pointer; transition: .18s ease;
+    }
+    .choice:hover:not(:disabled) { border-color: #a9c1ae; background: #f7faf5; transform: translateY(-2px); }
+    .choice:disabled { cursor: default; }
+    .choice-word { display: block; font-family: "Yu Gothic", "Meiryo", sans-serif; font-size: 22px; font-weight: 800; line-height: 1.35; }
+    .choice-reading { display: block; margin-top: 3px; color: #929b91; font-size: 11px; }
+    .choice.correct { border-color: #78a68a; background: #edf6ef; color: #315c43; }
+    .choice.wrong { border-color: #d99098; background: #fbefef; color: #9b4d57; }
+    .choice.correct::after { content: "✓"; position: absolute; right: 12px; top: 8px; font-weight: 900; color: #4b8b62; }
+    .choice.wrong::after { content: "×"; position: absolute; right: 12px; top: 5px; font-size: 19px; font-weight: 900; color: #c16f79; }
+
+    .feedback {
+      min-height: 44px; margin-top: 15px; padding: 10px 13px;
+      border-radius: 12px; background: #f7f6f0;
+      color: var(--muted); text-align: center; font-size: 12px; line-height: 1.6;
+    }
+    .feedback.good { color: #356a49; background: #edf6ef; }
+    .feedback.bad { color: #98515a; background: #fbefef; }
+
+    .result-card { text-align: center; }
+    .result-stamp {
+      display: grid; place-items: center; width: 83px; height: 83px;
+      margin: 0 auto 17px; border-radius: 27px;
+      background: var(--green-soft); font-size: 38px;
+    }
+    .result-title { font-size: clamp(27px, 5vw, 38px); margin: 8px 0; font-weight: 900; }
+    .result-subtitle { color: var(--muted); font-size: 13px; margin-bottom: 22px; }
+    .result-score {
+      display: flex; justify-content: center; align-items: baseline; gap: 8px;
+      margin: 9px 0 20px; color: var(--green-dark);
+    }
+    .result-score strong { font-size: 58px; line-height: 1; font-weight: 900; }
+    .result-score span { color: var(--muted); font-size: 14px; }
+    .result-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 360px; margin: 0 auto 25px; }
+    .result-stat { padding: 13px; border: 1px solid var(--line); background: #fffefa; border-radius: 15px; }
+    .result-stat strong { display: block; color: var(--green-dark); font-size: 20px; }
+    .result-stat span { color: var(--muted); font-size: 11px; }
+    .best-line { color: var(--gold); font-size: 12px; font-weight: 800; margin: 0 0 20px; }
+
+    footer { text-align: center; padding-top: 25px; color: #9aa39a; font-size: 10px; letter-spacing: .04em; }
+    .toast {
+      position: fixed; z-index: 5; left: 50%; bottom: 24px; transform: translate(-50%, 15px);
+      padding: 10px 16px; border-radius: 12px; background: #344d43; color: white;
+      box-shadow: 0 8px 25px rgba(0,0,0,.16); font-size: 12px;
+      opacity: 0; pointer-events: none; transition: .2s ease;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 560px) {
+      .app-shell { width: min(100% - 22px, 920px); padding-top: 18px; }
+      .topbar { margin-bottom: 18px; }
+      .level-tag { font-size: 10px; padding: 7px 9px; }
+      .brand-caption { font-size: 10px; }
+      .feature-row { gap: 7px; }
+      .feature { padding: 12px 5px; }
+      .feature-label { font-size: 10px; }
+      .choices { gap: 8px; }
+      .choice { min-height: 78px; padding: 12px 7px; }
+      .choice-word { font-size: 20px; }
+      .game-top { margin-bottom: 17px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand" aria-label="Kotoba Japanese Listening Game">
+        <div class="brand-mark">こ</div>
+        <div>
+          <div class="brand-name">KOTOBA</div>
+          <div class="brand-caption">JAPANESE LISTENING GAME</div>
+        </div>
+      </div>
+      <div class="level-tag"><span class="level-dot"></span> สำหรับ ม.4–ม.6</div>
+    </header>
+
+    <main>
+      <section id="welcomeScreen" class="screen" aria-labelledby="welcomeTitle">
+        <div class="welcome-card">
+          <div class="eyebrow">ことばを聞こう · Listen &amp; Learn</div>
+          <h1 id="welcomeTitle" class="hero-title">ฟังให้ชัด<br /><span>แล้วเลือกให้ถูก</span><span class="hero-jp">日本語</span></h1>
+          <p class="intro">ฝึกทักษะการฟังและจดจำคำศัพท์ภาษาญี่ปุ่น ผ่านเกมตอบคำถามที่ทั้งสนุกและได้ความรู้ ตั้งใจฟังเสียง แล้วเลือกคำศัพท์ที่ตรงกับเสียงที่ได้ยินมากที่สุด</p>
+
+          <div class="feature-row" aria-label="กติกาเกม">
+            <div class="feature"><div class="feature-icon">⏱️</div><div class="feature-value">30 วินาที</div><div class="feature-label">เวลาทั้งหมด</div></div>
+            <div class="feature"><div class="feature-icon">✦</div><div class="feature-value">+1 คะแนน</div><div class="feature-label">เมื่อตอบถูก</div></div>
+            <div class="feature"><div class="feature-icon">🔊</div><div class="feature-value">ฟังแล้วเลือก</div><div class="feature-label">คำศัพท์ 4 ตัวเลือก</div></div>
+          </div>
+
+          <button id="startButton" class="primary-btn" type="button">เริ่มเกม <span aria-hidden="true">→</span></button>
+          <p class="note">เสียงอ่านใช้ระบบ Text-to-Speech ภาษาญี่ปุ่นของเบราว์เซอร์หรืออุปกรณ์<br />แนะนำให้เปิดเสียงและใช้งานผ่าน Chrome, Edge หรือ Safari เวอร์ชันใหม่</p>
+        </div>
+      </section>
+
+      <section id="gameScreen" class="screen hidden" aria-label="หน้าจอเล่นเกม">
+        <div class="game-card">
+          <div class="game-top">
+            <div class="round-label">LISTENING CHALLENGE · <span id="questionCount">ข้อที่ 1</span></div>
+            <div class="score-pill">✦ คะแนน <span id="score">0</span></div>
+          </div>
+          <div class="timer-row" aria-label="เวลาที่เหลือ">
+            <div class="timer-track"><div id="timerFill" class="timer-fill"></div></div>
+            <div id="timerNumber" class="timer-number">00:30</div>
+          </div>
+
+          <div class="question-area">
+            <div class="question-kicker">ตั้งใจฟังเสียงคำศัพท์ภาษาญี่ปุ่น</div>
+            <button id="replayButton" class="sound-button" type="button" aria-label="เล่นเสียงคำศัพท์อีกครั้ง">
+              <span class="sound-icon" aria-hidden="true">🔊</span>
+              <span class="sound-main"><strong>ฟังเสียงคำศัพท์</strong><small>กดเพื่อฟังอีกครั้งได้</small></span>
+            </button>
+            <div class="listen-hint">เลือกคำศัพท์ภาษาญี่ปุ่นที่ตรงกับเสียงที่ได้ยิน</div>
+          </div>
+
+          <div class="choices-heading"><strong>คำตอบของคุณ</strong><span>เลือก 1 คำตอบ</span></div>
+          <div id="choices" class="choices"></div>
+          <div id="feedback" class="feedback" role="status" aria-live="polite">พร้อมแล้ว! ฟังเสียงและเลือกคำตอบได้เลย</div>
+        </div>
+      </section>
+
+      <section id="resultScreen" class="screen hidden" aria-labelledby="resultTitle">
+        <div class="result-card">
+          <div id="resultStamp" class="result-stamp" aria-hidden="true">🎉</div>
+          <div class="eyebrow">CHALLENGE COMPLETE</div>
+          <h2 id="resultTitle" class="result-title">เก่งมาก!</h2>
+          <p id="resultSubtitle" class="result-subtitle">หมดเวลาแล้ว มาดูผลการเล่นของคุณกัน</p>
+          <div class="result-score"><strong id="finalScore">0</strong><span>คะแนน</span></div>
+          <div class="result-stats">
+            <div class="result-stat"><strong id="correctCount">0</strong><span>ตอบถูก</span></div>
+            <div class="result-stat"><strong id="answeredCount">0</strong><span>ตอบทั้งหมด</span></div>
+          </div>
+          <p id="bestLine" class="best-line"></p>
+          <button id="restartButton" class="primary-btn" type="button">เล่นอีกครั้ง <span aria-hidden="true">↻</span></button>
+        </div>
+      </section>
+    </main>
+
+    <footer>日本語を楽しく学ぼう · เรียนภาษาญี่ปุ่นให้สนุกในทุกวัน</footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // คลังคำศัพท์ระดับพื้นฐานถึงกลาง เหมาะสำหรับนักเรียนชั้นมัธยมศึกษาตอนปลาย
+    const vocabulary = [
+      { word: "学校", reading: "がっこう", meaning: "โรงเรียน" },
+      { word: "先生", reading: "せんせい", meaning: "ครู / อาจารย์" },
+      { word: "友達", reading: "ともだち", meaning: "เพื่อน" },
+      { word: "図書館", reading: "としょかん", meaning: "ห้องสมุด" },
+      { word: "勉強", reading: "べんきょう", meaning: "การเรียน / การศึกษา" },
+      { word: "家族", reading: "かぞく", meaning: "ครอบครัว" },
+      { word: "食べ物", reading: "たべもの", meaning: "อาหาร" },
+      { word: "飲み物", reading: "のみもの", meaning: "เครื่องดื่ม" },
+      { word: "電車", reading: "でんしゃ", meaning: "รถไฟ" },
+      { word: "自転車", reading: "じてんしゃ", meaning: "จักรยาน" },
+      { word: "天気", reading: "てんき", meaning: "สภาพอากาศ" },
+      { word: "旅行", reading: "りょこう", meaning: "การท่องเที่ยว" },
+      { word: "写真", reading: "しゃしん", meaning: "รูปถ่าย" },
+      { word: "音楽", reading: "おんがく", meaning: "ดนตรี" },
+      { word: "映画", reading: "えいが", meaning: "ภาพยนตร์" },
+      { word: "将来", reading: "しょうらい", meaning: "อนาคต" },
+      { word: "環境", reading: "かんきょう", meaning: "สิ่งแวดล้อม" },
+      { word: "文化", reading: "ぶんか", meaning: "วัฒนธรรม" },
+      { word: "世界", reading: "せかい", meaning: "โลก" },
+      { word: "約束", reading: "やくそく", meaning: "คำสัญญา / การนัดหมาย" },
+      { word: "挑戦", reading: "ちょうせん", meaning: "ความท้าทาย / การท้าทาย" },
+      { word: "料理", reading: "りょうり", meaning: "การทำอาหาร / อาหาร" },
+      { word: "病院", reading: "びょういん", meaning: "โรงพยาบาล" },
+      { word: "質問", reading: "しつもん", meaning: "คำถาม" },
+      { word: "練習", reading: "れんしゅう", meaning: "การฝึกฝน" },
+      { word: "生活", reading: "せいかつ", meaning: "ชีวิตประจำวัน" },
+      { word: "自然", reading: "しぜん", meaning: "ธรรมชาติ" },
+      { word: "経済", reading: "けいざい", meaning: "เศรษฐกิจ" },
+      { word: "必要", reading: "ひつよう", meaning: "จำเป็น" },
+      { word: "安全", reading: "あんぜん", meaning: "ความปลอดภัย" }
+    ];
+
+    const GAME_SECONDS = 30;
+    const $ = (id) => document.getElementById(id);
+    const screens = { welcome: $("welcomeScreen"), game: $("gameScreen"), result: $("resultScreen") };
+    let score = 0;
+    let answered = 0;
+    let secondsLeft = GAME_SECONDS;
+    let timerId = null;
+    let advanceId = null;
+    let currentQuestion = null;
+    let locked = false;
+    let usedWords = new Set();
+    let bestScore = Number(localStorage.getItem("kotobaBestScore") || 0);
+    let toastId = null;
+
+    function showScreen(name) {
+      Object.entries(screens).forEach(([key, screen]) => screen.classList.toggle("hidden", key !== name));
+    }
+
+    function shuffle(items) {
+      const result = [...items];
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+      return result;
+    }
+
+    function speakJapanese(text) {
+      if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+        showToast("เบราว์เซอร์นี้ไม่รองรับระบบเสียงอ่านภาษาญี่ปุ่น");
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "ja-JP";
+      utterance.rate = 0.82;
+      utterance.pitch = 1;
+      const voices = window.speechSynthesis.getVoices();
+      const japaneseVoice = voices.find((voice) => voice.lang && voice.lang.toLowerCase().startsWith("ja"));
+      if (japaneseVoice) utterance.voice = japaneseVoice;
+      utterance.onerror = () => showToast("เล่นเสียงไม่สำเร็จ ลองกดปุ่มฟังอีกครั้ง");
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function showToast(message) {
+      const toast = $("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastId);
+      toastId = setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+
+    function createQuestion() {
+      if (usedWords.size >= vocabulary.length) usedWords.clear();
+      const available = vocabulary.filter((item) => !usedWords.has(item.word));
+      currentQuestion = available[Math.floor(Math.random() * available.length)];
+      usedWords.add(currentQuestion.word);
+      const distractors = shuffle(vocabulary.filter((item) => item.word !== currentQuestion.word)).slice(0, 3);
+      const options = shuffle([currentQuestion, ...distractors]);
+      renderOptions(options);
+      $("questionCount").textContent = `ข้อที่ ${answered + 1}`;
+      $("feedback").className = "feedback";
+      $("feedback").textContent = "พร้อมแล้ว! ฟังเสียงและเลือกคำตอบได้เลย";
+      locked = false;
+      speakJapanese(currentQuestion.reading);
+    }
+
+    function renderOptions(options) {
+      const container = $("choices");
+      container.innerHTML = "";
+      options.forEach((item) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "choice";
+        button.dataset.word = item.word;
+        button.innerHTML = `<span class="choice-word"></span><span class="choice-reading"></span>`;
+        button.querySelector(".choice-word").textContent = item.word;
+        button.querySelector(".choice-reading").textContent = item.reading;
+        button.addEventListener("click", () => chooseAnswer(item, button));
+        container.appendChild(button);
+      });
+    }
+
+    function chooseAnswer(selected, selectedButton) {
+      if (locked || secondsLeft <= 0) return;
+      locked = true;
+      answered += 1;
+      const buttons = [...$("choices").querySelectorAll("button")];
+      buttons.forEach((button) => {
+        button.disabled = true;
+        if (button.dataset.word === currentQuestion.word) button.classList.add("correct");
+      });
+
+      const feedback = $("feedback");
+      if (selected.word === currentQuestion.word) {
+        score += 1;
+        $("score").textContent = score;
+        feedback.className = "feedback good";
+        feedback.textContent = `ถูกต้อง! ${currentQuestion.word} (${currentQuestion.reading}) หมายถึง “${currentQuestion.meaning}” +1 คะแนน`;
+      } else {
+        selectedButton.classList.add("wrong");
+        feedback.className = "feedback bad";
+        feedback.textContent = `ยังไม่ถูกนะ คำตอบคือ ${currentQuestion.word} (${currentQuestion.reading}) หมายถึง “${currentQuestion.meaning}”`;
+      }
+
+      clearTimeout(advanceId);
+      advanceId = setTimeout(() => {
+        if (secondsLeft > 0) createQuestion();
+      }, 850);
+    }
+
+    function updateTimer() {
+      const percent = (secondsLeft / GAME_SECONDS) * 100;
+      $("timerFill").style.width = `${percent}%`;
+      $("timerNumber").textContent = `00:${String(secondsLeft).padStart(2, "0")}`;
+      $("timerNumber").classList.toggle("urgent", secondsLeft <= 10);
+    }
+
+    function startGame() {
+      clearInterval(timerId);
+      clearTimeout(advanceId);
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      score = 0;
+      answered = 0;
+      secondsLeft = GAME_SECONDS;
+      usedWords.clear();
+      locked = false;
+      $("score").textContent = "0";
+      updateTimer();
+      showScreen("game");
+      createQuestion();
+      timerId = setInterval(() => {
+        secondsLeft -= 1;
+        updateTimer();
+        if (secondsLeft <= 0) finishGame();
+      }, 1000);
+    }
+
+    function finishGame() {
+      clearInterval(timerId);
+      clearTimeout(advanceId);
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      const isNewBest = score > bestScore;
+      if (isNewBest) {
+        bestScore = score;
+        localStorage.setItem("kotobaBestScore", String(bestScore));
+      }
+      $("finalScore").textContent = score;
+      $("correctCount").textContent = score;
+      $("answeredCount").textContent = answered;
+      $("resultTitle").textContent = score >= 10 ? "すばらしい! ยอดเยี่ยม!" : score >= 5 ? "よくできました! ทำได้ดี!" : "ลองอีกครั้งนะ!";
+      $("resultSubtitle").textContent = `คุณทำคะแนนได้ ${score} คะแนน จากเวลาทั้งหมด 30 วินาที`;
+      $("resultStamp").textContent = score >= 10 ? "🏆" : score >= 5 ? "🌸" : "🌱";
+      $("bestLine").textContent = isNewBest ? "★ สถิติใหม่ของคุณ!" : `สถิติสูงสุดของคุณ ${bestScore} คะแนน`;
+      showScreen("result");
+    }
+
+    $("startButton").addEventListener("click", startGame);
+    $("restartButton").addEventListener("click", startGame);
+    $("replayButton").addEventListener("click", () => {
+      if (currentQuestion && !locked) speakJapanese(currentQuestion.reading);
+    });
+
+    // โหลดรายการเสียงของอุปกรณ์ล่วงหน้า เพื่อให้เลือกเสียง ja-JP ได้เมื่อมีให้ใช้งาน
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.getVoices();
+      window.speechSynthesis.addEventListener?.("voiceschanged", () => window.speechSynthesis.getVoices());
+    }
+  </script>
+</body>
+</html>
